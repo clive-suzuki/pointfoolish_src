@@ -2,24 +2,161 @@ module mod_szk
 !ver 1.01
 !    180719
 
-! 定数===============================================================
-  integer, parameter, save :: lszk_FullUnitList   = 100000 ! lszkuseuniが満席
+
+  character(*), parameter, private :: findlist = '_findlist_szk_mod.txt'
+  integer, parameter, private :: usedunitmax = 50
+  integer, private :: usedunit(usedunitmax)
+
+  interface operator(+)
+    module procedure &
+      & operator_real8Array_real8_pls &
+      & operator_intArray_int_pls
+  endinterface
+  interface operator(.of.)
+    module procedure &
+      & operator_real8Array_of &
+      & operator_intArray_of
+  endinterface
 
 
-! Global変数めいめいきそく===========================================
-! 1文字目    : l-整数，d-実数(8)，s-実数(4)，b-文字列
-! 2-4文字目  : szk
-! 5文字目以降: fnd-find
-!              lst-list
-!              max-max, min-min
-!              red-read
-!              uni-unit, use-used
-!====================================================================
-  character(*), parameter, save, private :: bszkfndlst = '_bszkfndlst_szk_mod.txt'
-  integer, parameter, save, private :: lszkuseunimax = 50, lszkuseunimin = 30
-  integer, save, private :: lszkuseuni(lszkuseunimax)
-  integer, save, private :: lszkred = 5
+  !class intArray
+    type intArray
+      integer, allocatable :: data(:)
+      integer :: size=0, pointer=1
+    endtype
 
+    function operator_intArray_int_pls(a, b) result(ret)
+      type(intArray), intent(in) :: a
+      integer, intent(in) :: b
+      type(intArray) :: ret
+      integer, allocatable :: buf(:)
+      integer :: i, inewsiz, ioldsiz
+      ioldsiz = a%size
+      if(ioldsiz <= a%pointer)then
+        inewsiz = ioldsiz + 100
+        allocate(buf(inewsiz))
+        do i=1, ioldsiz
+          buf(i) = a%data(i)
+        enddo
+        if(ioldsiz /= 0) deallocate(a%data)
+        allocate(a%data(inewsiz))
+        do i=1, ioldsiz
+          a%data(i) = buf(i)
+        enddo
+        ioldsiz = inewsiz
+        a%size = ioldsiz
+      endif
+      a%data(a%pointer) = b
+      a%pointer = a%pointer + 1
+    endfunction
+
+    function operator_intArray_of(a, b) result(ret)
+      integer, intent(in) :: a
+      type(intArray), intent(in) :: b
+      integer :: ret
+      ret = b%data(a)
+    endfunction
+  !endclass
+
+  !class real8Array
+    type real8Array
+      real(8), allocatable :: data(:)
+      integer :: size=0, pointer=1
+    endtype
+
+    function operator_real8Array_real8_pls(a, b) result(ret)!====
+      type(real8Array), intent(in) :: a           !====
+      real(8), intent(in) :: b                    !====
+      type(real8Array) :: ret                     !====
+      real(8), allocatable :: buf(:)              !====
+      integer :: i, inewsiz, ioldsiz
+      ioldsiz = a%size
+      if(ioldsiz <= a%pointer)then
+        inewsiz = ioldsiz + 100
+        allocate(buf(inewsiz))
+        do i=1, ioldsiz
+          buf(i) = a%data(i)
+        enddo
+        if(ioldsiz /= 0) deallocate(a%data)
+        allocate(a%data(inewsiz))
+        do i=1, ioldsiz
+          a%data(i) = buf(i)
+        enddo
+        ioldsiz = inewsiz
+        a%size = ioldsiz
+      endif
+      a%data(a%pointer) = b
+      a%pointer = a%pointer + 1
+    endfunction
+
+    function operator_real8Array_of(a, b) result(ret)!====
+      integer, intent(in) :: a
+      type(real8Array), intent(in) :: b              !====
+      real(8) :: ret                                 !====
+      ret = b%data(a)
+    endfunction
+  !endclass
+
+  !class stringArray
+    type stringArray
+      character(:), allocatable :: data(:)
+      integer, allocatable :: length(:)
+      integer :: size=0, pointer=1, maxlength=0
+    endtype
+
+    function operator_stringArray_string_pls(a, b) result(ret)
+      type(stringArray), intent(in) :: a          !====
+      character(*), intent(in) :: b               !====
+      type(stringArray) :: ret                    !====
+      character(:), allocatable :: buf(:)         !====
+      integer, allocatable :: ibuf(:)
+      integer :: i, inewsiz, ioldsiz, inewlen, ioldlen, ipnt
+      integer :: iblen
+      logical :: fg_exp
+      ioldsiz = a%size
+      ioldlen = a%maxlength
+      iblen = len(b)
+      if(ioldsiz <= a%pointer)then
+        inewsiz = ioldsiz + 100
+        fg_exp = .true.
+      else
+        inewsiz = ioldsiz
+      endif
+      if(ioldlen < iblen)then
+        inewlen = iblen
+        fg_exp = .true.
+      else
+        inewlen = ioldlen
+      endif
+      if(fg_exp)then
+        allocate(character(inewlen) :: buf(inewsiz), ibuf(inewsiz))
+        do i=1, ioldsiz
+          buf(i) = a%data(i)
+          ibuf(i) = a%length(i)
+        enddo
+        if(ioldsiz /= 0) deallocate(a%data)
+        allocate(character(inewlen) :: a%data(inewsiz), a%length(inewsiz))
+        do i=1, ioldsiz
+          a%data(i) = buf(i)
+          a%length(i) = ibuf(i)
+        enddo
+        a%size = inewsiz
+        a%maxlength = inewlen
+      endif
+      ipnt = a%pointer
+      a%data(ipnt) = b
+      a%length(ipnt) = iblen
+      a%pointer = ipnt + 1
+    endfunction
+
+    function operator_stringArray_of(a, b) result(ret)
+      integer, intent(in) :: a
+      type(stringArray), intent(in) :: b
+      character(:), allocatable :: ret                        !====
+      allocate(character(b%length(a)) :: ret)
+      ret = b%data(a)
+    endfunction
+  !endclass
 
   interface toString
     module procedure toStringK, toStringF
@@ -213,11 +350,11 @@ contains
     character(*), intent(in), optional :: command
     integer :: openFileListStream
     if(present(command)) then
-      call system( command // ' > ' // bszkfndlst)
+      call system( command // ' > ' // findlist)
     else
-      call system('ls > ' // bszkfndlst)
+      call system('ls > ' // findlist)
     endif
-    openFileListStream = open2(bszkfndlst, 'old', 'formatted')
+    openFileListStream = open2(findlist, 'old', 'formatted')
   endfunction
 
   ! closeFileListStream=====
@@ -229,7 +366,7 @@ contains
     integer, intent(in) :: hfile
     integer :: closeFindListStream
     closeFindListStream = close2(hfile)
-    call system('rm ' // bszkfndlst)
+    call system('rm ' // findlist)
   endfunction
 
   ! lock2==================
@@ -240,14 +377,14 @@ contains
     integer :: lock2
     integer :: i
     lock2 = 0
-    do i=1, lszkuseunimax
-      if(lszkuseuni(i)==0)then
-        lszkuseuni(i) = 1
-        lock2 = lszkuseunimin + i
+    do i=1, usedunitmax
+      if(usedunit(i)==0)then
+        usedunit(i) = 1
+        lock2 = 20 + i
         return
       endif
     enddo
-    write(6,*) 'ERROR MOD_SZK!! : '//toString(lszk_FullUnitList)
+    write(6,*) 'ERROR MOD_SZK !! Cannot open file!'
   endfunction
 
   ! release2==================
@@ -258,41 +395,28 @@ contains
   function release2(unit)
     integer, intent(in) :: unit
     integer :: release2
-    if(unit > lszkuseunimin) then
-      release2 = unit
-      lszkuseuni(unit - lszkuseunimin) = 0
-    endif
+    release2 = unit
+    usedunit(unit - 20) = 0
   endfunction
 
   ! open2==================
   !** 空いているUnit番号を確保し，それでファイルを開く（必ず返却すること）
+  !   Optional引数関連のバグがあるため，すべて指定することを推奨
   ! * file    ファイル名
-  ! * status  (optional, default:'unknown') ファイルを開く条件（公式ガイド参照）
-  ! * form    (optional, default:'formatted') ファイルの書式
-  ! * iostat  (optional) オープンに成功したら0，失敗したら正の値（エラーコード）
+  ! * status
+  ! * form
   ! * return  確保したUnit番号（空きがなかったら0）
   !========================
-  function open2(file , status, form, iostat)
+  function open2(file , status, form)!lockに統合？
     integer :: open2
-    character(*), intent(in) :: file
-    character(*), intent(in), optional :: status, form
-    integer, intent(out), optional :: iostat
-    character(30) :: cstt = 'unknown', cfrm = 'formatted'
-    integer :: istt
-
+    character(len=*), intent(in) :: file
+    character(len=*), intent(in), optional :: status, form
     open2 = lock2()
-    if(present(status)) cstt = status
-    if(present(form)) cfrm = form
     if(open2/=0)then
-      open(unit=open2, file=file, status=cstt, form=cfrm, iostat=istt)
-      if(istt > 0)then
-        open2 = release2(open2)
-        open2 = 0
-      endif
-    else
-      istt = lszk_FullUnitList
+      open(unit=open2, file=file, status=status, form=form)
+      return
     endif
-    if(present(iostat)) iostat = istt
+    write(6,*) 'ERROR MOD_SZK !! Cannot open file!'
   endfunction
 
   ! close2==================
@@ -306,45 +430,5 @@ contains
     close(unit)
     close2 = release2(unit)
   endfunction
-
-  ! getInputMethod==================
-  !** コマンドライン引数が存在していれば，そのファイルを開く
-  ! * kidx    (optional, default:1) 何番目の引数か
-  ! * return  引数があればUnit番号，なければ5
-  !========================
-  function getInputMethod(kidx)
-    integer, intent(in), optional :: kidx
-    integer :: iidx = 1, ichrlen, ierr
-    character(:), allocatable :: cfil
-
-    if(present(kidx)) iidx = kidx
-    if(iidx > command_argument_count())then
-      lszkred = 5
-    else
-      call get_command_argument(iidx, length=ichrlen)
-      allocate(character(ichrlen)::cfil)
-      call get_command_argument(iidx, cfil)
-      lszkred = open2(file=cfil, status='old', iostat=ierr)
-      if(ierr /= 0)then
-        lszkred = releaseInputMethod()
-      endif
-    endif
-    getInputMethod = lszkred
-  endfunction
-
-  function releaseInputMethod()
-    if(lszkred /= 5) lszkred = close2(lszkred)
-    lszkred = 5
-    releaseInputMethod = lszkred
-  endfunction
-
-  subroutine echo(earg, kuni)
-    character(*), intent(in) :: earg
-    integer, intent(in), optional :: kuni
-    integer :: iuni = 6
-
-    if(present(kuni)) iuni = kuni
-    write(iuni,*) earg
-  endsubroutine
 
 end module mod_szk

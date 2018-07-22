@@ -1,11 +1,15 @@
 module mod_grobals
 
-!===========================Grid====================
-  real(8), save, allocatable :: dgrd(:,:,:)
-  integer, save :: ljlen, lklen
-  integer, save, parameter :: lilen = 2
 
 !===========================IO====================
-  logical, save :: fg_loop
-  integer :: lread, lwrt
+  integer, save :: lread, lwrt
+
+
+!===========================Grid====================
+  real(8), save, allocatable :: dgrd(:,:,:)
+  integer, save :: ljnum, lknum, ljbgn, ljend, lkbgn, lkend
+  integer, save, parameter :: linum=2, libgn=1, liend=2
+
+
+
 endmodule
