@@ -362,4 +362,17 @@ contains
     write(iuni,*) earg
   endsubroutine
 
+  function line(elin, knum)
+    character(*), intent(in) :: elin
+    integer, intent(in), optional :: knum
+    integer :: inum = 64, i
+    character(:), allocatable :: line
+    if(present(knum)) inum = knum
+    allocate(character(inum*len(elin))::line)
+    kine = ''
+    do i=1, inum
+      line = trim(line) // elin
+    enddo
+  endfunction
+
 end module mod_szk

@@ -251,9 +251,11 @@ function exportGrid(cfil)
 endfunction
 
 subroutine help
+  call echo(line('-'))
   call listBasicCommand
   call listAdvancedCommand
   call echo('↑ マウスホイールでスクロール')
+  call echo(line('-'))
   call echo(' ')
 endsubroutine
 

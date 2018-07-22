@@ -19,7 +19,8 @@ allocate(dgrd(1,1,1)) ! initializeGrid内部で一度deallocateするため
 call initializeGrid
 
 !call echo(toString(splitall('import grid.xyz', ' ', test)))
-
+call echo(' ')
+call echo(line('%'))
 call echo('Hello! Welcome to Pointfoolish!')
 call echo('Now, you have 2 × 2 = 4 points (1 m × 1 m grid)')
 call echo('Is there anything I can do for you?')
@@ -43,6 +44,7 @@ do while(fg_loop)
 enddo
 
 call echo('See you again...')
+call echo(' ')
 lread = releaseInputMethod()
 stop
 end program
