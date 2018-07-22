@@ -365,11 +365,11 @@ contains
   function line(elin, knum)
     character(*), intent(in) :: elin
     integer, intent(in), optional :: knum
-    integer :: inum = 64, i
+    integer :: inum = 45, i
     character(:), allocatable :: line
     if(present(knum)) inum = knum
     allocate(character(inum*len(elin))::line)
-    kine = ''
+    line = ''
     do i=1, inum
       line = trim(line) // elin
     enddo

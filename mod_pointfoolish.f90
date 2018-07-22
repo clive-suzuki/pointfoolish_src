@@ -314,7 +314,8 @@ function trimGrid(kjbgn, kjend, kkbgn, kkend)
   logical :: trimGrid
   trimGrid = .false.
 
-  if(kjbgn<ljbgn .or. kkbgn<lkbgn .or. kjend<ljend .or. kkend>lkend)then
+  if(min(kjbgn,kjend)<ljbgn .or. max(kjbgn,kjend)>ljend .or. &
+  &  min(kkbgn,kkend)<lkbgn .or. max(kkbgn,kkend)>lkend)then
     call echo('Error!!! grid number is invalid')
     trimGrid = .true.
   else
@@ -332,6 +333,10 @@ function trimGrid(kjbgn, kjend, kkbgn, kkend)
     enddo
     deallocate(dgrd)
     allocate(dgrd(ijnum, iknum, linum))
+    ljend = ijnum
+    lkend = iknum
+    ljnum = ijnum
+    lknum = iknum
     dgrd = agrd
   endif
 endfunction
