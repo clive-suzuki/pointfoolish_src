@@ -1,7 +1,7 @@
 #FC = gfortran
 FC = ifort
 
-TARGET = ${HOME}/bin/gdszk
+TARGET = ${HOME}/bin/pntfool
 OBJECTS = mod_szk.o mod_globals.o mod_pointfoolish.o main.o
 MOD_FILES = mod_szk.mod mod_globals.mod mod_pointfoolish.mod
 

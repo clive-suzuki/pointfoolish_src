@@ -3,7 +3,9 @@ module mod_szk
 !    180719
 
 ! 定数===============================================================
-  integer, parameter, save :: lszk_FullUnitList   = 100000 ! lszkuseuniが満席
+  integer, parameter :: lszk_FullUnitList   = 100000 ! lszkuseuniが満席
+  character(*), parameter :: bszk_FindList = '_bszk_FindList_szk_mod.txt'
+  integer, parameter :: lszk_UsedUnitMax = 50, lszk_UsedUnitMin = 30
 
 
 ! Global変数めいめいきそく===========================================
@@ -15,14 +17,12 @@ module mod_szk
 !              red-read
 !              uni-unit, use-used
 !====================================================================
-  character(*), parameter, save, private :: bszkfndlst = '_bszkfndlst_szk_mod.txt'
-  integer, parameter, save, private :: lszkuseunimax = 50, lszkuseunimin = 30
-  integer, save, private :: lszkuseuni(lszkuseunimax)
+  integer, save, private :: lszkuseuni(lszk_UsedUnitMax)
   integer, save, private :: lszkred = 5
 
 
   interface toString
-    module procedure toStringK, toStringF
+    module procedure toStringK, toStringF, toStringD
   endinterface
 
 
@@ -68,11 +68,26 @@ contains
   function toStringF(f)
     real(4), intent(in) :: f
     character(:), allocatable :: toStringF
-    character(20) :: str
+    character(40) :: str
     write(str, *) f
     str = atrim(str)
     allocate(character(len_trim(str)) :: toStringF)
     toStringF = trim(str)
+  endfunction
+
+  ! toString alias toStringD===============
+  !** 実数を文字列へ
+  ! * f      実数
+  ! * return 文字列
+  !========================
+  function toStringD(d)
+    real(8), intent(in) :: d
+    character(:), allocatable :: toStringD
+    character(40) :: str
+    write(str, *) d
+    str = atrim(str)
+    allocate(character(len_trim(str)) :: toStringD)
+    toStringD = trim(str)
   endfunction
 
   ! toInteger==============
@@ -213,11 +228,11 @@ contains
     character(*), intent(in), optional :: command
     integer :: openFileListStream
     if(present(command)) then
-      call system( command // ' > ' // bszkfndlst)
+      call system( command // ' > ' // bszk_FindList)
     else
-      call system('ls > ' // bszkfndlst)
+      call system('ls > ' // bszk_FindList)
     endif
-    openFileListStream = open2(bszkfndlst, 'old', 'formatted')
+    openFileListStream = open2(bszk_FindList, 'old', 'formatted')
   endfunction
 
   ! closeFileListStream=====
@@ -229,7 +244,7 @@ contains
     integer, intent(in) :: hfile
     integer :: closeFindListStream
     closeFindListStream = close2(hfile)
-    call system('rm ' // bszkfndlst)
+    call system('rm ' // bszk_FindList)
   endfunction
 
   ! lock2==================
@@ -240,10 +255,10 @@ contains
     integer :: lock2
     integer :: i
     lock2 = 0
-    do i=1, lszkuseunimax
+    do i=1, lszk_UsedUnitMax
       if(lszkuseuni(i)==0)then
         lszkuseuni(i) = 1
-        lock2 = lszkuseunimin + i
+        lock2 = lszk_UsedUnitMin + i
         return
       endif
     enddo
@@ -258,9 +273,9 @@ contains
   function release2(unit)
     integer, intent(in) :: unit
     integer :: release2
-    if(unit > lszkuseunimin) then
+    if(unit > lszk_UsedUnitMin) then
       release2 = unit
-      lszkuseuni(unit - lszkuseunimin) = 0
+      lszkuseuni(unit - lszk_UsedUnitMin) = 0
     endif
   endfunction
 

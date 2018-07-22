@@ -1,6 +1,6 @@
 program pointfoolish
 use mod_szk
-use mod_globals
+use mod_grobals
 use mod_pointfoolish
 
 ! Pointfoolish ver 1.00 (2018/07/10)
@@ -10,27 +10,25 @@ implicit none
 character(256) :: cinp
 integer :: i = 1
 
-lwrt = 5
+!character(:), allocatable :: test(:)
+
+lwrt = 6
 lread = getInputMethod()
 
 allocate(dgrd(1,1,1)) ! initializeGrid内部で一度deallocateするため
 call initializeGrid
 
+!call echo(toString(splitall('import grid.xyz', ' ', test)))
+
 call echo('Hello! Welcome to Pointfoolish!')
 call echo('Now, you have 2 × 2 = 4 points (1 m × 1 m grid)')
 call echo('Is there anything I can do for you?')
 call echo(' ')
-call echo('Command List')
-call echo('initialize  : initialize current grid and make 2 × 2 = 4 points (1 m × 1 m grid)')
-call echo('command *   : read command list file and execute [*: filename]')
-call echo('import *    : discard current grid and import xyz file [*: filename]')
-call echo('export *    : export current grid as a xyz file [*: filename]')
-call echo('help        : display other useful command')
-call echo('end         : end this program')
-call echo(' ')
+call listBasicCommand
 
 do while(fg_loop)
-  read(lread,*) cinp
+  call echo('Input command...')
+  read(lread,'(a)') cinp
 
   ! backup grid
 
@@ -44,7 +42,7 @@ do while(fg_loop)
   i = i + 1
 enddo
 
-call echo('See you, again...')
+call echo('See you again...')
 lread = releaseInputMethod()
 stop
 end program
